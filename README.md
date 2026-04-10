@@ -10,7 +10,7 @@ Access your home network remotely via a custom domain name without a static IP!
 - 🔁 The Python runtime will re-use existing HTTP connections.
 - 🗃️ Cloudflare API responses are cached to reduce API usage.
 - 🤏 The Docker image is small and efficient.
-- 0️⃣ Zero dependencies.
+- 0️⃣ Zero external dependencies (pure Python standard library).
 - 💪 Supports all platforms.
 - 🏠 Enables low cost self hosting to promote a more decentralized internet.
 - 🔒 Zero-log IP provider ([cdn-cgi/trace](https://www.cloudflare.com/cdn-cgi/trace))
@@ -39,7 +39,8 @@ First copy the example configuration file into the real one.
 cp config-example.json config.json
 ```
 
-Edit `config.json` and replace the values with your own.
+Edit `config.json` and replace the values with your own. You can also use
+`CF_DDNS_*` environment variables inside `config.json` (templated at runtime).
 
 ### 🔑 Authentication methods
 
@@ -76,7 +77,7 @@ Some ISP provided modems only allow port forwarding over IPv4 or IPv6. In this c
 "zone_id": "The ID of the zone that will get the records. From your dashboard click into the zone. Under the overview tab, scroll down and the zone ID is listed in the right rail",
 "subdomains": "Array of subdomains you want to update the A & where applicable, AAAA records. IMPORTANT! Only write subdomain name. Do not include the base domain name. (e.g. foo or an empty string to update the base domain)",
 "proxied": "Defaults to false. Make it true if you want CDN/SSL benefits from cloudflare. This usually disables SSH)",
-"ttl": "Defaults to 300 seconds. Longer TTLs speed up DNS lookups by increasing the chance of cached results, but a longer TTL also means that updates to your records take longer to go into effect. You can choose a TTL between 30 seconds and 1 day. For more information, see [Cloudflare's TTL documentation](https://developers.cloudflare.com/dns/manage-dns-records/reference/ttl/)",
+"ttl": "Defaults to 300 seconds. You can also set 'auto' (mapped to 1 in the API) for proxied/auto TTL. For more information, see Cloudflare's TTL documentation.",
 ```
 
 ## 📠 Hosting multiple subdomains on the same IP?
@@ -274,7 +275,7 @@ For ex:
 
 ### 🧹 Optional features
 
-`purgeUnknownRecords` removes stale DNS records from Cloudflare. This is useful if you have a dynamic DNS record that you no longer want to use. If you have a dynamic DNS record that you no longer want to use, you can set `purgeUnknownRecords` to `true` and the script will remove the stale DNS record from Cloudflare.
+`purgeUnknownRecords` removes extra DNS records of the same FQDN and type, except the one managed by this tool. This is safer than deleting all A/AAAA in the zone.
 
 ## 🐳 Deploy with Docker Compose
 
@@ -308,7 +309,7 @@ Docker requires network_mode be set to host in order to access the IPv6 public a
 From the project root directory
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 ## 🐋 Kubernetes

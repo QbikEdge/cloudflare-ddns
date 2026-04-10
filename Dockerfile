@@ -1,18 +1,14 @@
-# ---- Base ----
-FROM python:alpine AS base
+# ---- Build ----
+FROM rust:alpine AS builder
+RUN apk add --no-cache musl-dev
+WORKDIR /build
+COPY Cargo.toml Cargo.lock ./
+COPY src ./src
+RUN cargo build --release
+RUN apk add --no-cache upx && upx --best --lzma target/release/cloudflare-ddns
 
-#
-# ---- Dependencies ----
-FROM base AS dependencies
-# install dependencies
-COPY requirements.txt .
-RUN pip install --user -r requirements.txt
-
-#
 # ---- Release ----
-FROM base AS release
-# copy installed dependencies and project source file(s)
-WORKDIR /
-COPY --from=dependencies /root/.local /root/.local
-COPY cloudflare-ddns.py .
-CMD ["python", "-u", "/cloudflare-ddns.py", "--repeat"]
+FROM scratch AS release
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=builder /build/target/release/cloudflare-ddns /cloudflare-ddns
+ENTRYPOINT ["/cloudflare-ddns", "--repeat"]

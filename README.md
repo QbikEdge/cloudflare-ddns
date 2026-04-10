@@ -1,286 +1,240 @@
 <p align="center"><a href="https://timknowsbest.com/free-dynamic-dns" target="_blank" rel="noopener noreferrer"><img width="1024" src="feature-graphic.jpg" alt="Cloudflare DDNS"/></a></p>
 
-# 🚀 Cloudflare DDNS
+# 🌍 Cloudflare DDNS
 
 Access your home network remotely via a custom domain name without a static IP!
 
-## ⚡ Efficiency
+A feature-complete dynamic DNS client for Cloudflare, written in Rust. The **smallest and most memory-efficient** open-source Cloudflare DDNS Docker image available — **~1.1 MB image size** and **~3.5 MB RAM** at runtime, smaller and leaner than Go-based alternatives. Built as a fully static binary from scratch with zero runtime dependencies.
 
-- ❤️ Easy config. List your domains and you're done.
-- 🔁 The Python runtime will re-use existing HTTP connections.
-- 🗃️ Cloudflare API responses are cached to reduce API usage.
-- 🤏 The Docker image is small and efficient.
-- 0️⃣ Zero dependencies.
-- 💪 Supports all platforms.
-- 🏠 Enables low cost self hosting to promote a more decentralized internet.
-- 🔒 Zero-log IP provider ([cdn-cgi/trace](https://www.cloudflare.com/cdn-cgi/trace))
-- 👐 GPL-3.0 License. Open source for open audits.
+Configure everything with environment variables. Supports notifications, heartbeat monitoring, WAF list management, flexible scheduling, and more.
 
-## 💯 Complete Support of Domain Names, Subdomains, IPv4 & IPv6, and Load Balancing
+[![Docker Pulls](https://img.shields.io/docker/pulls/timothyjmiller/cloudflare-ddns?style=flat&logo=docker&label=pulls)](https://hub.docker.com/r/timothyjmiller/cloudflare-ddns) [![Docker Image Size](https://img.shields.io/docker/image-size/timothyjmiller/cloudflare-ddns/latest?style=flat&logo=docker&label=image%20size)](https://hub.docker.com/r/timothyjmiller/cloudflare-ddns)
 
-- 🌐 Supports multiple domains (zones) on the same IP.
-- 📠 Supports multiple subdomains on the same IP.
-- 📡 IPv4 and IPv6 support.
-- 🌍 Supports all Cloudflare regions.
-- ⚖️ Supports [Cloudflare Load Balancing](https://developers.cloudflare.com/load-balancing/understand-basics/pools/).
-- 🇺🇸 Made in the U.S.A.
+## ✨ Features
 
-## 📊 Stats
+- 🔍 **Multiple IP detection providers** — Cloudflare Trace, Cloudflare DNS-over-HTTPS, ipify, local interface, custom URL, or static IPs
+- 📡 **IPv4 and IPv6** — Full dual-stack support with independent provider configuration
+- 🌐 **Multiple domains and zones** — Update any number of domains across multiple Cloudflare zones
+- 🃏 **Wildcard domains** — Support for `*.example.com` records
+- 🌍 **Internationalized domain names** — Full IDN/punycode support (e.g. `münchen.de`)
+- 🛡️ **WAF list management** — Automatically update Cloudflare WAF IP lists
+- 🔔 **Notifications** — Shoutrrr-compatible notifications (Discord, Slack, Telegram, Gotify, Pushover, generic webhooks)
+- 💓 **Heartbeat monitoring** — Healthchecks.io and Uptime Kuma integration
+- ⏱️ **Cron scheduling** — Flexible update intervals via cron expressions
+- 🧪 **Dry-run mode** — Preview changes without modifying DNS records
+- 🧹 **Graceful shutdown** — Signal handling (SIGINT/SIGTERM) with optional DNS record cleanup
+- 💬 **Record comments** — Tag managed records with comments for identification
+- 🎯 **Managed record regex** — Control which records the tool manages via regex matching
+- 🎨 **Pretty output with emoji** — Configurable emoji and verbosity levels
+- 🔒 **Zero-log IP detection** — Uses Cloudflare's [cdn-cgi/trace](https://www.cloudflare.com/cdn-cgi/trace) by default
+- 🏠 **CGNAT-aware local detection** — Filters out shared address space (100.64.0.0/10) and private ranges
+- 🚫 **Cloudflare IP rejection** — Automatically rejects Cloudflare anycast IPs to prevent incorrect DNS updates
+- 🤏 **Tiny static binary** — ~1.1 MB Docker image built from scratch, zero runtime dependencies
 
-| Size                                                                                                                                                                                                                           | Downloads                                                                                                                                                                                         | Discord                                                                                                                                                    |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [![cloudflare-ddns docker image size](https://img.shields.io/docker/image-size/timothyjmiller/cloudflare-ddns?style=flat-square)](https://hub.docker.com/r/timothyjmiller/cloudflare-ddns 'cloudflare-ddns docker image size') | [![Total DockerHub pulls](https://img.shields.io/docker/pulls/timothyjmiller/cloudflare-ddns?style=flat-square)](https://hub.docker.com/r/timothyjmiller/cloudflare-ddns 'Total DockerHub pulls') | [![Official Discord Server](https://img.shields.io/discord/785778163887112192?style=flat-square)](https://discord.gg/UgGmwMvNxm 'Official Discord Server') |
-
-## 🚦 Getting Started
-
-First copy the example configuration file into the real one.
+## 🚀 Quick Start
 
 ```bash
-cp config-example.json config.json
+docker run -d \
+  --name cloudflare-ddns \
+  --restart unless-stopped \
+  --network host \
+  -e CLOUDFLARE_API_TOKEN=your-api-token \
+  -e DOMAINS=example.com,www.example.com \
+  timothyjmiller/cloudflare-ddns:latest
 ```
 
-Edit `config.json` and replace the values with your own.
+That's it. The container detects your public IP and updates the DNS records for your domains every 5 minutes.
 
-### 🔑 Authentication methods
+> ⚠️ `--network host` is required to detect IPv6 addresses. If you only need IPv4, you can omit it and set `IP6_PROVIDER=none`.
 
-You can choose to use either the newer API tokens, or the traditional API keys
+## 🔑 Authentication
 
-To generate a new API tokens, go to your [Cloudflare Profile](https://dash.cloudflare.com/profile/api-tokens) and create a token capable of **Edit DNS**. Then replace the value in
+| Variable | Description |
+|----------|-------------|
+| `CLOUDFLARE_API_TOKEN` | API token with "Edit DNS" capability |
+| `CLOUDFLARE_API_TOKEN_FILE` | Path to a file containing the API token (Docker secrets compatible) |
 
-```json
-"authentication":
-  "api_token": "Your cloudflare API token, including the capability of **Edit DNS**"
-```
+To generate an API token, go to your [Cloudflare Profile](https://dash.cloudflare.com/profile/api-tokens) and create a token capable of **Edit DNS**.
 
-Alternatively, you can use the traditional API keys by setting appropriate values for:
+## 🌐 Domains
 
-```json
-"authentication":
-  "api_key":
-    "api_key": "Your cloudflare API Key",
-    "account_email": "The email address you use to sign in to cloudflare",
-```
+| Variable | Description |
+|----------|-------------|
+| `DOMAINS` | Comma-separated list of domains to update for both IPv4 and IPv6 |
+| `IP4_DOMAINS` | Comma-separated list of IPv4-only domains |
+| `IP6_DOMAINS` | Comma-separated list of IPv6-only domains |
 
-### 📍 Enable or disable IPv4 or IPv6
+Wildcard domains are supported: `*.example.com`
 
-Some ISP provided modems only allow port forwarding over IPv4 or IPv6. In this case, you would want to disable any interface not accessible via port forward.
+At least one of `DOMAINS`, `IP4_DOMAINS`, `IP6_DOMAINS`, or `WAF_LISTS` must be set.
 
-```json
-"a": true,
-"aaaa": true
-```
+## 🔍 IP Detection Providers
 
-### 🎛️ Other values explained
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `IP4_PROVIDER` | `ipify` | IPv4 detection method |
+| `IP6_PROVIDER` | `cloudflare.trace` | IPv6 detection method |
 
-```json
-"zone_id": "The ID of the zone that will get the records. From your dashboard click into the zone. Under the overview tab, scroll down and the zone ID is listed in the right rail",
-"subdomains": "Array of subdomains you want to update the A & where applicable, AAAA records. IMPORTANT! Only write subdomain name. Do not include the base domain name. (e.g. foo or an empty string to update the base domain)",
-"proxied": "Defaults to false. Make it true if you want CDN/SSL benefits from cloudflare. This usually disables SSH)",
-"ttl": "Defaults to 300 seconds. Longer TTLs speed up DNS lookups by increasing the chance of cached results, but a longer TTL also means that updates to your records take longer to go into effect. You can choose a TTL between 30 seconds and 1 day. For more information, see [Cloudflare's TTL documentation](https://developers.cloudflare.com/dns/manage-dns-records/reference/ttl/)",
-```
+Available providers:
 
-## 📠 Hosting multiple subdomains on the same IP?
+| Provider | Description |
+|----------|-------------|
+| `cloudflare.trace` | 🔒 Cloudflare's `/cdn-cgi/trace` endpoint (default, zero-log) |
+| `cloudflare.doh` | 🌐 Cloudflare DNS-over-HTTPS (`whoami.cloudflare` TXT query) |
+| `ipify` | 🌎 ipify.org API |
+| `local` | 🏠 Local IP via system routing table (no network traffic, CGNAT-aware) |
+| `local.iface:<name>` | 🔌 IP from a specific network interface (e.g., `local.iface:eth0`) |
+| `url:<url>` | 🔗 Custom HTTP(S) endpoint that returns an IP address |
+| `literal:<ips>` | 📌 Static IP addresses (comma-separated) |
+| `none` | 🚫 Disable this IP type |
 
-This script can be used to update multiple subdomains on the same IP address.
+## 🚫 Cloudflare IP Rejection
 
-For example, if you have a domain `example.com` and you want to host additional subdomains at `foo.example.com` and `bar.example.com` on the same IP address, you can use this script to update the DNS records for all subdomains.
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `REJECT_CLOUDFLARE_IPS` | `true` | Reject detected IPs that fall within Cloudflare's IP ranges |
 
-### ⚠️ Note
+Some IP detection providers occasionally return a Cloudflare anycast IP instead of your real public IP. When this happens, your DNS record gets updated to point at Cloudflare infrastructure rather than your actual address.
 
-Please remove the comments after `//` in the below example. They are only there to explain the config.
+By default, each update cycle fetches [Cloudflare's published IP ranges](https://www.cloudflare.com/ips/) and skips any detected IP that falls within them. A warning is logged for every rejected IP. If the ranges cannot be fetched, the update is skipped entirely to prevent writing a Cloudflare IP.
 
-Do not include the base domain name in your `subdomains` config. Do not use the [FQDN](https://en.wikipedia.org/wiki/Fully_qualified_domain_name).
+To disable this protection, set `REJECT_CLOUDFLARE_IPS=false`.
 
-### 👉 Example 🚀
+## ⏱️ Scheduling
 
-```bash
-{
-  "cloudflare": [
-    {
-      "authentication": {
-        "api_token": "api_token_here", // Either api_token or api_key
-        "api_key": {
-          "api_key": "api_key_here",
-          "account_email": "your_email_here"
-        }
-      },
-      "zone_id": "your_zone_id_here",
-      "subdomains": [
-        {
-          "name": "", // Root domain (example.com)
-          "proxied": true
-        },
-        {
-          "name": "foo", // (foo.example.com)
-          "proxied": true
-        },
-        {
-          "name": "bar", // (bar.example.com)
-          "proxied": true
-        }
-      ]
-    }
-  ],
-  "a": true,
-  "aaaa": true,
-  "purgeUnknownRecords": false,
-  "ttl": 300
-}
-```
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `UPDATE_CRON` | `@every 5m` | Update schedule |
+| `UPDATE_ON_START` | `true` | Run an update immediately on startup |
+| `DELETE_ON_STOP` | `false` | Delete managed DNS records on shutdown |
 
-## 🌐 Hosting multiple domains (zones) on the same IP?
+Schedule formats:
 
-You can handle ddns for multiple domains (cloudflare zones) using the same docker container by duplicating your configs inside the `cloudflare: []` key within `config.json` like below:
+- `@every 5m` — Every 5 minutes
+- `@every 1h` — Every hour
+- `@every 30s` — Every 30 seconds
+- `@once` — Run once and exit
 
-### ⚠️ Note:
+When `UPDATE_CRON=@once`, `UPDATE_ON_START` must be `true` and `DELETE_ON_STOP` must be `false`.
 
-If you are using API Tokens, make sure the token used supports editing your zone ID.
+## 📝 DNS Record Settings
 
-```bash
-{
-  "cloudflare": [
-    {
-      "authentication": {
-        "api_token": "api_token_here",
-        "api_key": {
-          "api_key": "api_key_here",
-          "account_email": "your_email_here"
-        }
-      },
-      "zone_id": "your_first_zone_id_here",
-      "subdomains": [
-        {
-          "name": "",
-          "proxied": false
-        },
-        {
-          "name": "remove_or_replace_with_your_subdomain",
-          "proxied": false
-        }
-      ]
-    },
-    {
-      "authentication": {
-        "api_token": "api_token_here",
-        "api_key": {
-          "api_key": "api_key_here",
-          "account_email": "your_email_here"
-        }
-      },
-      "zone_id": "your_second_zone_id_here",
-      "subdomains": [
-        {
-          "name": "",
-          "proxied": false
-        },
-        {
-          "name": "remove_or_replace_with_your_subdomain",
-          "proxied": false
-        }
-      ]
-    }
-  ],
-  "a": true,
-  "aaaa": true,
-  "purgeUnknownRecords": false
-}
-```
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `TTL` | `1` (auto) | DNS record TTL in seconds (1=auto, or 30-86400) |
+| `PROXIED` | `false` | Expression controlling which domains are proxied through Cloudflare |
+| `RECORD_COMMENT` | (empty) | Comment attached to managed DNS records |
+| `MANAGED_RECORDS_COMMENT_REGEX` | (empty) | Regex to identify which records are managed (empty = all) |
 
-## ⚖️ Load Balancing
+The `PROXIED` variable supports boolean expressions:
 
-If you have multiple IP addresses and want to load balance between them, you can use the `loadBalancing` option. This will create a CNAME record for each subdomain that points to the subdomain with the lowest IP address.
+| Expression | Meaning |
+|------------|---------|
+| `true` | ☁️ Proxy all domains |
+| `false` | 🔓 Don't proxy any domains |
+| `is(example.com)` | 🎯 Only proxy `example.com` |
+| `sub(cdn.example.com)` | 🌳 Proxy `cdn.example.com` and its subdomains |
+| `is(a.com) \|\| is(b.com)` | 🔀 Proxy `a.com` or `b.com` |
+| `!is(vpn.example.com)` | 🚫 Proxy everything except `vpn.example.com` |
 
-### 📜 Example config to support load balancing
+Operators: `is()`, `sub()`, `!`, `&&`, `||`, `()`
 
-```json
-{
-  "cloudflare": [
-    {
-      "authentication": {
-        "api_token": "api_token_here",
-        "api_key": {
-          "api_key": "api_key_here",
-          "account_email": "your_email_here"
-        }
-      },
-      "zone_id": "your_zone_id_here",
-      "subdomains": [
-        {
-          "name": "",
-          "proxied": false
-        },
-        {
-          "name": "remove_or_replace_with_your_subdomain",
-          "proxied": false
-        }
-      ]
-    }
-  ],{
-  "cloudflare": [
-    {
-      "authentication": {
-        "api_token": "api_token_here",
-        "api_key": {
-          "api_key": "api_key_here",
-          "account_email": "your_email_here"
-        }
-      },
-      "zone_id": "your_zone_id_here",
-      "subdomains": [
-        {
-          "name": "",
-          "proxied": false
-        },
-        {
-          "name": "remove_or_replace_with_your_subdomain",
-          "proxied": false
-        }
-      ]
-    }
-  ],
-  "load_balancer": [
-    {
-      "authentication": {
-        "api_token": "api_token_here",
-        "api_key": {
-          "api_key": "api_key_here",
-          "account_email": "your_email_here"
-        }
-      },
-      "pool_id": "your_pool_id_here",
-      "origin": "your_origin_name_here"
-    }
-  ],
-  "a": true,
-  "aaaa": true,
-  "purgeUnknownRecords": false,
-  "ttl": 300
-}
-```
+## 🛡️ WAF Lists
 
-### Docker environment variable support
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `WAF_LISTS` | (empty) | Comma-separated WAF lists in `account-id/list-name` format |
+| `WAF_LIST_DESCRIPTION` | (empty) | Description for managed WAF lists |
+| `WAF_LIST_ITEM_COMMENT` | (empty) | Comment for WAF list items |
+| `MANAGED_WAF_LIST_ITEMS_COMMENT_REGEX` | (empty) | Regex to identify managed WAF list items |
 
-Define environmental variables starts with `CF_DDNS_` and use it in config.json
+WAF list names must match the pattern `[a-z0-9_]+`.
 
-For ex:
+## 🔔 Notifications (Shoutrrr)
 
-```json
-{
-  "cloudflare": [
-    {
-      "authentication": {
-        "api_token": "${CF_DDNS_API_TOKEN}",
-```
+| Variable | Description |
+|----------|-------------|
+| `SHOUTRRR` | Newline-separated list of notification service URLs |
 
-### 🧹 Optional features
+Supported services:
 
-`purgeUnknownRecords` removes stale DNS records from Cloudflare. This is useful if you have a dynamic DNS record that you no longer want to use. If you have a dynamic DNS record that you no longer want to use, you can set `purgeUnknownRecords` to `true` and the script will remove the stale DNS record from Cloudflare.
+| Service | URL format |
+|---------|------------|
+| 💬 Discord | `discord://token@webhook-id` |
+| 📨 Slack | `slack://token-a/token-b/token-c` |
+| ✈️ Telegram | `telegram://bot-token@telegram?chats=chat-id` |
+| 📡 Gotify | `gotify://host/path?token=app-token` |
+| 📲 Pushover | `pushover://user-key@api-token` |
+| 🌐 Generic webhook | `generic://host/path` or `generic+https://host/path` |
 
-## 🐳 Deploy with Docker Compose
+Notifications are sent when DNS records are updated, created, deleted, or when errors occur.
 
-Pre-compiled images are available via [the official docker container on DockerHub](https://hub.docker.com/r/timothyjmiller/cloudflare-ddns).
+## 💓 Heartbeat Monitoring
 
-Modify the host file path of config.json inside the volumes section of docker-compose.yml.
+| Variable | Description |
+|----------|-------------|
+| `HEALTHCHECKS` | Healthchecks.io ping URL |
+| `UPTIMEKUMA` | Uptime Kuma push URL |
+
+Heartbeats are sent after each update cycle. On failure, a fail signal is sent. On shutdown, an exit signal is sent.
+
+## ⏳ Timeouts
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `DETECTION_TIMEOUT` | `5s` | Timeout for IP detection requests |
+| `UPDATE_TIMEOUT` | `30s` | Timeout for Cloudflare API requests |
+
+## 🖥️ Output
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `EMOJI` | `true` | Use emoji in output messages |
+| `QUIET` | `false` | Suppress informational output |
+
+## 🏁 CLI Flags
+
+| Flag | Description |
+|------|-------------|
+| `--dry-run` | 🧪 Preview changes without modifying DNS records |
+| `--repeat` | 🔁 Run continuously (legacy config mode only; env var mode uses `UPDATE_CRON`) |
+
+## 📋 All Environment Variables
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `CLOUDFLARE_API_TOKEN` | — | 🔑 API token |
+| `CLOUDFLARE_API_TOKEN_FILE` | — | 📄 Path to API token file |
+| `DOMAINS` | — | 🌐 Domains for both IPv4 and IPv6 |
+| `IP4_DOMAINS` | — | 4️⃣ IPv4-only domains |
+| `IP6_DOMAINS` | — | 6️⃣ IPv6-only domains |
+| `IP4_PROVIDER` | `ipify` | 🔍 IPv4 detection provider |
+| `IP6_PROVIDER` | `cloudflare.trace` | 🔍 IPv6 detection provider |
+| `UPDATE_CRON` | `@every 5m` | ⏱️ Update schedule |
+| `UPDATE_ON_START` | `true` | 🚀 Update on startup |
+| `DELETE_ON_STOP` | `false` | 🧹 Delete records on shutdown |
+| `TTL` | `1` | ⏳ DNS record TTL |
+| `PROXIED` | `false` | ☁️ Proxied expression |
+| `RECORD_COMMENT` | — | 💬 DNS record comment |
+| `MANAGED_RECORDS_COMMENT_REGEX` | — | 🎯 Managed records regex |
+| `WAF_LISTS` | — | 🛡️ WAF lists to manage |
+| `WAF_LIST_DESCRIPTION` | — | 📝 WAF list description |
+| `WAF_LIST_ITEM_COMMENT` | — | 💬 WAF list item comment |
+| `MANAGED_WAF_LIST_ITEMS_COMMENT_REGEX` | — | 🎯 Managed WAF items regex |
+| `DETECTION_TIMEOUT` | `5s` | ⏳ IP detection timeout |
+| `UPDATE_TIMEOUT` | `30s` | ⏳ API request timeout |
+| `REJECT_CLOUDFLARE_IPS` | `true` | 🚫 Reject Cloudflare anycast IPs |
+| `EMOJI` | `true` | 🎨 Enable emoji output |
+| `QUIET` | `false` | 🤫 Suppress info output |
+| `HEALTHCHECKS` | — | 💓 Healthchecks.io URL |
+| `UPTIMEKUMA` | — | 💓 Uptime Kuma URL |
+| `SHOUTRRR` | — | 🔔 Notification URLs (newline-separated) |
+
+---
+
+## 🚢 Deployment
+
+### 🐳 Docker Compose
 
 ```yml
 version: '3.9'
@@ -292,146 +246,310 @@ services:
       - no-new-privileges:true
     network_mode: 'host'
     environment:
-      - PUID=1000
-      - PGID=1000
+      - CLOUDFLARE_API_TOKEN=your-api-token
+      - DOMAINS=example.com,www.example.com
+      - PROXIED=true
+      - IP6_PROVIDER=none
+      - HEALTHCHECKS=https://hc-ping.com/your-uuid
+    restart: unless-stopped
+```
+
+> ⚠️ Docker requires `network_mode: host` to access the IPv6 public address.
+
+### ☸️ Kubernetes
+
+The included manifest uses the legacy JSON config mode. Create a secret containing your `config.json` and apply:
+
+```bash
+kubectl create secret generic config-cloudflare-ddns --from-file=config.json -n ddns
+kubectl apply -f k8s/cloudflare-ddns.yml
+```
+
+### 🐧 Linux + Systemd
+
+1. Build and install:
+
+```bash
+cargo build --release
+sudo cp target/release/cloudflare-ddns /usr/local/bin/
+```
+
+2. Copy the systemd units from the `systemd/` directory:
+
+```bash
+sudo cp systemd/cloudflare-ddns.service /etc/systemd/system/
+sudo cp systemd/cloudflare-ddns.timer /etc/systemd/system/
+```
+
+3. Place a `config.json` at `/etc/cloudflare-ddns/config.json` (the systemd service uses legacy config mode).
+
+4. Enable the timer:
+
+```bash
+sudo systemctl enable --now cloudflare-ddns.timer
+```
+
+The timer runs the service every 15 minutes (configurable in `cloudflare-ddns.timer`).
+
+## 🔨 Building from Source
+
+```bash
+cargo build --release
+```
+
+The binary is at `target/release/cloudflare-ddns`.
+
+### 🐳 Docker builds
+
+```bash
+# Single architecture (linux/amd64)
+./scripts/docker-build.sh
+
+# Multi-architecture (linux/amd64, linux/arm64, linux/ppc64le)
+./scripts/docker-build-all.sh
+```
+
+## 💻 Supported Platforms
+
+- 🐳 [Docker](https://docs.docker.com/get-docker/) (amd64, arm64, ppc64le)
+- 🐙 [Docker Compose](https://docs.docker.com/compose/install/)
+- ☸️ [Kubernetes](https://kubernetes.io/docs/tasks/tools/)
+- 🐧 [Systemd](https://www.freedesktop.org/wiki/Software/systemd/)
+- 🍎 macOS, 🪟 Windows, 🐧 Linux — anywhere Rust compiles
+
+---
+
+## 📁 Legacy JSON Config File
+
+For backwards compatibility, cloudflare-ddns still supports configuration via a `config.json` file. This mode is used automatically when no `CLOUDFLARE_API_TOKEN` environment variable is set.
+
+### 🚀 Quick Start
+
+```bash
+cp config-example.json config.json
+# Edit config.json with your values
+cloudflare-ddns
+```
+
+### 🔑 Authentication
+
+Use either an API token (recommended) or a legacy API key:
+
+```json
+"authentication": {
+  "api_token": "Your cloudflare API token with Edit DNS capability"
+}
+```
+
+Or with a legacy API key:
+
+```json
+"authentication": {
+  "api_key": {
+    "api_key": "Your cloudflare API Key",
+    "account_email": "The email address you use to sign in to cloudflare"
+  }
+}
+```
+
+### 📡 IPv4 and IPv6
+
+Some ISP provided modems only allow port forwarding over IPv4 or IPv6. Disable the interface that is not accessible:
+
+```json
+"a": true,
+"aaaa": true
+```
+
+### ⚙️ Config Options
+
+By default, the legacy config file is loaded from `./config.json`. Set the `CONFIG_PATH` environment variable to change the directory:
+
+```bash
+CONFIG_PATH=/etc/cloudflare-ddns cloudflare-ddns
+```
+
+Or in Docker Compose:
+
+```yml
+environment:
+  - CONFIG_PATH=/config
+volumes:
+  - /your/path/config.json:/config/config.json
+```
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| `cloudflare` | array | required | List of zone configurations |
+| `a` | bool | `true` | Enable IPv4 (A record) updates |
+| `aaaa` | bool | `true` | Enable IPv6 (AAAA record) updates |
+| `purgeUnknownRecords` | bool | `false` | Delete stale/duplicate DNS records |
+| `ttl` | int | `300` | DNS record TTL in seconds (30-86400, values < 30 become auto) |
+| `ip4_provider` | string | `"cloudflare.trace"` | IPv4 detection provider (same values as `IP4_PROVIDER` env var) |
+| `ip6_provider` | string | `"cloudflare.trace"` | IPv6 detection provider (same values as `IP6_PROVIDER` env var) |
+
+### 🚫 Cloudflare IP Rejection (Legacy Mode)
+
+Cloudflare IP rejection is enabled by default in legacy mode too. To disable it, set `REJECT_CLOUDFLARE_IPS=false` alongside your `config.json`:
+
+```bash
+REJECT_CLOUDFLARE_IPS=false cloudflare-ddns
+```
+
+Or in Docker Compose:
+
+```yml
+environment:
+  - REJECT_CLOUDFLARE_IPS=false
+volumes:
+  - ./config.json:/config.json
+```
+
+### 🔍 IP Detection (Legacy Mode)
+
+Legacy mode now uses the same shared provider abstraction as environment variable mode. By default it uses the `cloudflare.trace` provider, which builds an IP-family-bound HTTP client (`0.0.0.0` for IPv4, `[::]` for IPv6) to guarantee the correct address family on dual-stack hosts.
+
+You can override the detection method per address family with `ip4_provider` and `ip6_provider` in your `config.json`. Supported values are the same as the `IP4_PROVIDER` / `IP6_PROVIDER` environment variables: `cloudflare.trace`, `cloudflare.doh`, `ipify`, `local`, `local.iface:<name>`, `url:<https://...>`, `none`.
+
+Set a provider to `"none"` to disable detection for that address family (overrides `a`/`aaaa`):
+
+```json
+{
+  "a": true,
+  "aaaa": true,
+  "ip4_provider": "cloudflare.trace",
+  "ip6_provider": "none"
+}
+```
+
+Each zone entry contains:
+
+| Key | Type | Description |
+|-----|------|-------------|
+| `authentication` | object | API token or API key credentials |
+| `zone_id` | string | Cloudflare zone ID (found in zone dashboard) |
+| `subdomains` | array | Subdomain entries to update |
+| `proxied` | bool | Default proxied status for subdomains in this zone |
+
+Subdomain entries can be a simple string or a detailed object:
+
+```json
+"subdomains": [
+  "",
+  "@",
+  "www",
+  { "name": "vpn", "proxied": true }
+]
+```
+
+Use `""` or `"@"` for the root domain. Do not include the base domain name.
+
+### 🔄 Environment Variable Substitution
+
+In the legacy config file, values can reference environment variables with the `CF_DDNS_` prefix:
+
+```json
+{
+  "cloudflare": [{
+    "authentication": {
+      "api_token": "${CF_DDNS_API_TOKEN}"
+    },
+    ...
+  }]
+}
+```
+
+### 📠 Example: Multiple Subdomains
+
+```json
+{
+  "cloudflare": [
+    {
+      "authentication": {
+        "api_token": "your-api-token"
+      },
+      "zone_id": "your_zone_id",
+      "subdomains": [
+        { "name": "", "proxied": true },
+        { "name": "www", "proxied": true },
+        { "name": "vpn", "proxied": false }
+      ]
+    }
+  ],
+  "a": true,
+  "aaaa": true,
+  "purgeUnknownRecords": false,
+  "ttl": 300
+}
+```
+
+### 🌐 Example: Multiple Zones
+
+```json
+{
+  "cloudflare": [
+    {
+      "authentication": { "api_token": "your-api-token" },
+      "zone_id": "first_zone_id",
+      "subdomains": [
+        { "name": "", "proxied": false }
+      ]
+    },
+    {
+      "authentication": { "api_token": "your-api-token" },
+      "zone_id": "second_zone_id",
+      "subdomains": [
+        { "name": "", "proxied": false }
+      ]
+    }
+  ],
+  "a": true,
+  "aaaa": true,
+  "purgeUnknownRecords": false
+}
+```
+
+### 🐳 Docker Compose (legacy config file)
+
+```yml
+version: '3.9'
+services:
+  cloudflare-ddns:
+    image: timothyjmiller/cloudflare-ddns:latest
+    container_name: cloudflare-ddns
+    security_opt:
+      - no-new-privileges:true
+    network_mode: 'host'
     volumes:
       - /YOUR/PATH/HERE/config.json:/config.json
     restart: unless-stopped
 ```
 
-### ⚠️ IPv6
+### 🏁 Legacy CLI Flags
 
-Docker requires network_mode be set to host in order to access the IPv6 public address.
-
-### 🏃‍♂️ Running
-
-From the project root directory
+In legacy config mode, use `--repeat` to run continuously (the TTL value is used as the update interval):
 
 ```bash
-docker-compose up -d
+cloudflare-ddns --repeat
+cloudflare-ddns --repeat --dry-run
 ```
 
-## 🐋 Kubernetes
+---
 
-Create config File
+## 🔗 Helpful Links
 
-```bash
-cp ../../config-example.json config.json
-```
+- 🔑 [Cloudflare API token](https://dash.cloudflare.com/profile/api-tokens)
+- 🆔 [Cloudflare zone ID](https://support.cloudflare.com/hc/en-us/articles/200167836-Where-do-I-find-my-Cloudflare-IP-address-)
+- 📋 [Cloudflare zone DNS record ID](https://support.cloudflare.com/hc/en-us/articles/360019093151-Managing-DNS-records-in-Cloudflare)
 
-Edit config.jsonon (vim, nvim, nano... )
+## 📜 License
 
-```bash
-${EDITOR} config.json
-```
+This project is licensed under the GNU General Public License, version 3 (GPLv3).
 
-Create config file as Secret.
-
-```bash
-kubectl create secret generic config-cloudflare-ddns --from-file=config.json --dry-run=client -oyaml -n ddns > config-cloudflare-ddns-Secret.yaml
-```
-
-apply this secret
-
-```bash
-kubectl apply -f config-cloudflare-ddns-Secret.yaml
-rm config.json # recomended Just keep de secret on Kubernetes Cluster
-```
-
-apply this Deployment
-
-```bash
-kubectl apply -f cloudflare-ddns-Deployment.yaml
-```
-
-## 🐧 Deploy with Linux + Cron
-
-### 🏃 Running (all distros)
-
-This script requires Python 3.5+, which comes preinstalled on the latest version of Raspbian. Download/clone this repo and give permission to the project's bash script by running `chmod +x ./start-sync.sh`. Now you can execute `./start-sync.sh`, which will set up a virtualenv, pull in any dependencies, and fire the script.
-
-1. Upload the cloudflare-ddns folder to your home directory /home/your_username_here/
-
-2. Run the following code in terminal
-
-```bash
-crontab -e
-```
-
-3. Add the following lines to sync your DNS records every 15 minutes
-
-```bash
-*/15 * * * * /home/your_username_here/cloudflare-ddns/start-sync.sh
-```
-
-## Building from source
-
-Create a config.json file with your production credentials.
-
-### 💖 Please Note
-
-The optional `docker-build-all.sh` script requires Docker experimental support to be enabled.
-
-Docker Hub has experimental support for multi-architecture builds. Their official blog post specifies easy instructions for building with [Mac and Windows versions of Docker Desktop](https://docs.docker.com/docker-for-mac/multi-arch/).
-
-1. Choose build platform
-
-- Multi-architecture (experimental) `docker-build-all.sh`
-
-- Linux/amd64 by default `docker-build.sh`
-
-2. Give your bash script permission to execute.
-
-```bash
-sudo chmod +x ./docker-build.sh
-```
-
-```bash
-sudo chmod +x ./docker-build-all.sh
-```
-
-3. At project root, run the `docker-build.sh` script.
-
-Recommended for local development
-
-```bash
-./docker-build.sh
-```
-
-Recommended for production
-
-```bash
-./docker-build-all.sh
-```
-
-### Run the locally compiled version
-
-```bash
-docker run -d timothyjmiller/cloudflare_ddns:latest
-```
-
-## Supported Platforms
-
-- [Docker](https://docs.docker.com/get-docker/)
-- [Docker Compose](https://docs.docker.com/compose/install/)
-- [Kubernetes](https://kubernetes.io/docs/tasks/tools/)
-- [Python 3](https://www.python.org/downloads/)
-- [Systemd](https://www.freedesktop.org/wiki/Software/systemd/)
-
-## 📜 Helpful links
-
-- [Cloudflare API token](https://dash.cloudflare.com/profile/api-tokens)
-- [Cloudflare zone ID](https://support.cloudflare.com/hc/en-us/articles/200167836-Where-do-I-find-my-Cloudflare-IP-address-)
-- [Cloudflare zone DNS record ID](https://support.cloudflare.com/hc/en-us/articles/360019093151-Managing-DNS-records-in-Cloudflare)
-
-## License
-
-This Template is licensed under the GNU General Public License, version 3 (GPLv3).
-
-## Author
+## 👨‍💻 Author
 
 Timothy Miller
 
 [View my GitHub profile 💡](https://github.com/timothymiller)
 
-[View my personal website 💻](https://timknowsbest.com)
+[View my personal website 💻](https://itstmillertime.com)
